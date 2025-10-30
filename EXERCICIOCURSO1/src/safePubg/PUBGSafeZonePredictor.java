@@ -29,6 +29,7 @@ import javax.swing.*;
  * 4. Detecção de Água: Impede que as safes se centrem na água (Seção 1.1).
  * 5. Contenção: Garante que cada safe esteja contida na anterior (Seção 2.3).
  */
+@SuppressWarnings("serial")
 public class PUBGSafeZonePredictor {
     // --- CONSTANTES DE CONFIGURAÇÃO DO JOGO ---
     
@@ -98,6 +99,7 @@ public class PUBGSafeZonePredictor {
 
     /**
      * O método principal. Inicia a aplicação Swing.
+     * @param args Argumentos de linha de comando (não utilizados).
      */
     public static void main(String[] args) {
         // Carrega as imagens dos mapas na memória
@@ -129,6 +131,7 @@ public class PUBGSafeZonePredictor {
              * Este método é o coração visual. Ele é chamado toda vez
              * que o painel precisa ser redesenhado (ex: no início, ou
              * quando chamamos drawingPanel.repaint()).
+             * @param g O contexto gráfico.
              */
             @Override
             protected void paintComponent(Graphics g) {
@@ -201,6 +204,7 @@ public class PUBGSafeZonePredictor {
             /**
              * Chamado quando o mouse é pressionado.
              * Inicia a rota do avião.
+             * @param e O evento do mouse.
              */
             @Override
             public void mousePressed(MouseEvent e) {
@@ -214,6 +218,7 @@ public class PUBGSafeZonePredictor {
             /**
              * Chamado quando o mouse é solto.
              * Finaliza a rota e determina o tipo.
+             * @param e O evento do mouse.
              */
             @Override
             public void mouseReleased(MouseEvent e) {
@@ -228,6 +233,7 @@ public class PUBGSafeZonePredictor {
             /**
              * Chamado continuamente enquanto o mouse é arrastado.
              * Atualiza o 'endPoint' para feedback visual.
+             * @param e O evento do mouse.
              */
             @Override
             public void mouseDragged(MouseEvent e) {
@@ -358,7 +364,7 @@ public class PUBGSafeZonePredictor {
     // --- MÉTODOS PRINCIPAIS DA LÓGICA DO JOGO ---
 
     /**
-     * O CÉREBRO PRINCIPAL (Substitui o predictSafeZone original).
+     * O CÉREBRO PRINCIPAL.
      * Calcula a SEQUÊNCIA INTEIRA de 7 safes com base nas regras do PUBG.
      */
     private static void predictSafeZoneSequence() {
@@ -485,9 +491,12 @@ public class PUBGSafeZonePredictor {
     }
 
     /**
-     * MÉTODO 2 (Substitui generateZonePoint original)
      * Gera o ponto de centro para a FASE 1, com base nas regras de probabilidade
      * e garantindo que esteja em terra.
+     * @param zone A zona sorteada (Central, Periférica, Borda).
+     * @param distance A distância da rota sorteada (Sobre, Próximo, Distante).
+     * @param rand O gerador de números aleatórios.
+     * @return O ponto do centro da Fase 1, ou o último ponto tentado em caso de falha.
      */
     private static Point2D generateZonePoint(int zone, int distance, Random rand) {
         double centerX = 400;
@@ -570,7 +579,6 @@ public class PUBGSafeZonePredictor {
     }
 
     /**
-     * MÉTODO 3 (Novo Método Auxiliar)
      * Gera um ponto aleatório para as Fases 2-7, obedecendo à faixa de raio
      * (minRadiusPercent, maxRadiusPercent) para simular Soft/Hard Shifts.
      * @param center O centro do círculo anterior.
@@ -578,6 +586,7 @@ public class PUBGSafeZonePredictor {
      * @param minRadiusPercent A % mínima de 'searchRadius' (ex: 0.4 para Hard Shift).
      * @param maxRadiusPercent A % máxima de 'searchRadius' (ex: 0.6 para Soft Shift).
      * @param rand O gerador aleatório.
+     * @return O ponto gerado.
      */
     private static Point2D generateRandomPointInCircle(Point2D center, double searchRadius, double minRadiusPercent, double maxRadiusPercent, Random rand) {
         // Pega um ângulo aleatório (0 a 360 graus)
@@ -603,10 +612,10 @@ public class PUBGSafeZonePredictor {
     }
     
     /**
-     * MÉTODO 4 (Novo Método Auxiliar de Detecção de Água)
      * Verifica se um ponto (coordenada) está em terra ou na água.
-     * Usa a regra de cor customizada (Azul > Verde E Azul > Vermelho + 10)
-     * que encontramos usando os seus dados de debug.
+     * Usa a regra de cor customizada (Azul > Verde E Azul > Vermelho + 10).
+     * @param point O ponto a ser verificado.
+     * @return {@code true} se for terra, {@code false} se for água.
      */
     private static boolean isLand(Point2D point) {
         BufferedImage currentMapImage = mapImages.get(MAPS[selectedMap]);
@@ -635,9 +644,10 @@ public class PUBGSafeZonePredictor {
     }
 
     /**
-     * MÉTODO 5 (Substitui o getZoneType original)
      * Retorna o nome da zona (Central, Periférica, Borda) de um ponto.
      * Inclui uma verificação para evitar erro se o ponto for nulo.
+     * @param point O ponto a ser classificado.
+     * @return O nome da zona.
      */
     private static String getZoneType(Point2D point) {
         if (point == null) return "Desconhecida"; // Correção de bug
@@ -660,7 +670,6 @@ public class PUBGSafeZonePredictor {
     }
 
     /**
-     * ITEM 6 (Nova Classe Auxiliar)
      * Uma classe simples ("struct") para guardar o centro
      * e o raio de uma safe zone.
      */
@@ -668,6 +677,11 @@ public class PUBGSafeZonePredictor {
         Point2D center;
         double radius;
         
+        /**
+         * Construtor da SafeZone.
+         * @param center O ponto central.
+         * @param radius O raio.
+         */
         SafeZone(Point2D center, double radius) {
             this.center = center;
             this.radius = radius;
