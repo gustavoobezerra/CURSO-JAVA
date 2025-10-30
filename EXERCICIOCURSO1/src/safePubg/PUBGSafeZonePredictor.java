@@ -9,6 +9,7 @@ import java.awt.event.*;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -276,29 +277,53 @@ public class PUBGSafeZonePredictor {
      */
     private static void loadMapImages() {
         String[] mapNames = {"erangel", "miramar", "taego", "rondo"};
-        
         try {
+            // Mostra o diretório de trabalho para ajudar no diagnóstico
+            System.out.println("user.dir = " + System.getProperty("user.dir"));
+
             for (String mapName : mapNames) {
-                // O caminho DEVE começar com '/' e ser relativo ao source folder
                 String path = "/safePubg/maps/" + mapName + ".png"; 
                 InputStream imageStream = PUBGSafeZonePredictor.class.getResourceAsStream(path);
-                
+
+                // Tenta também via ClassLoader sem a barra inicial
                 if (imageStream == null) {
-                    throw new IOException("Recurso não encontrado: " + path);
+                    imageStream = Thread.currentThread().getContextClassLoader()
+                        .getResourceAsStream("safePubg/maps/" + mapName + ".png");
                 }
-                
-                BufferedImage img = ImageIO.read(imageStream);
+
+                BufferedImage img = null;
+
+                if (imageStream != null) {
+                    img = ImageIO.read(imageStream);
+                } else {
+                    // Tenta carregar direto do sistema de arquivos (útil em execução a partir do IDE)
+                    String fsPath1 = "src/safePubg/maps/" + mapName + ".png";
+                    String fsPath2 = "EXERCICIOCURSO1/src/safePubg/maps/" + mapName + ".png";
+                    File f1 = new File(fsPath1);
+                    File f2 = new File(fsPath2);
+                    if (f1.exists()) {
+                        img = ImageIO.read(f1);
+                        System.out.println("Carregado do filesystem: " + f1.getAbsolutePath());
+                    } else if (f2.exists()) {
+                        img = ImageIO.read(f2);
+                        System.out.println("Carregado do filesystem: " + f2.getAbsolutePath());
+                    } else {
+                        System.out.println("Recurso não encontrado em classpath: " + path + " ; tentados: " + fsPath1 + ", " + fsPath2);
+                        throw new IOException("Recurso não encontrado: " + path);
+                    }
+                }
+
                 // Capitaliza o nome para usar como chave (ex: "Erangel")
                 String capitalizedMapName = mapName.substring(0, 1).toUpperCase() + mapName.substring(1);
                 mapImages.put(capitalizedMapName, img);
             }
-            System.out.println("Mapas carregados com sucesso como recursos!");
+            System.out.println("Mapas carregados com sucesso (resource ou filesystem)!");
 
         } catch (IOException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(null, 
-                "Erro ao carregar imagens como recurso!\n" +
-                "Verifique se a pasta 'maps' está dentro da pasta 'safePubg'.\n" +
+                "Erro ao carregar imagens!\n" +
+                "Verifique se a pasta 'maps' está dentro da pasta 'safePubg' e se os arquivos existem.\n" +
                 "Detalhes: " + e.getMessage());
             // Se falhar, cria imagens coloridas simples
             createDefaultMapImages();
